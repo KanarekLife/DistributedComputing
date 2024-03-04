@@ -1,5 +1,19 @@
 #include "hashmap.h"
 
+hash_node *hashmap_find(hashmap *map, hash_t hash)
+{
+    hash_node *node = map->hash_nodes;
+    while (node != NULL)
+    {
+        if (map->compare(node->hash, hash) == 0)
+        {
+            return node;
+        }
+        node = node->next;
+    }
+    return NULL;
+}
+
 hashmap *hashmap_create(hash_t (*hash)(data_t *), int (*compare)(hash_t, hash_t), void (*print)(data_t *))
 {
     hashmap *map = malloc(sizeof(hashmap));
@@ -46,7 +60,7 @@ bool hashmap_insert(hashmap *map, data_t *data)
         }
         node->hash = hash;
         node->data_nodes = NULL;
-        node->next = NULL;
+        node->prev = NULL; // Assign prev as NULL
 
         // Find the correct position to insert the node in sorted order
         hash_node *current = map->hash_nodes;
@@ -61,12 +75,17 @@ bool hashmap_insert(hashmap *map, data_t *data)
         if (prev != NULL)
         {
             prev->next = node;
+            node->prev = prev; // Assign prev to the previous node
         }
         else
         {
             map->hash_nodes = node;
         }
         node->next = current;
+        if (current != NULL)
+        {
+            current->prev = node; // Assign prev to the next node
+        }
     }
 
     data_node *new_data = malloc(sizeof(data_node));
@@ -134,6 +153,24 @@ data_t *hashmap_get(hashmap *map, hash_t hash, bool shouldDeleteAfterRetrieval)
                     data->next->prev = data->prev;
                 }
                 free(data);
+
+                // Delete empty hash_node if no data_t remains
+                if (node->data_nodes == NULL)
+                {
+                    if (node->prev != NULL)
+                    {
+                        node->prev->next = node->next;
+                    }
+                    else
+                    {
+                        map->hash_nodes = node->next;
+                    }
+                    if (node->next != NULL)
+                    {
+                        node->next->prev = node->prev;
+                    }
+                    free(node);
+                }
             }
             return ret;
         }
@@ -147,7 +184,7 @@ void hashmap_print(hashmap *map)
     hash_node *node = map->hash_nodes;
     while (node != NULL)
     {
-        printf("Hash: %d\n", node->hash);
+        printf("Hash: %ld\n", node->hash);
         data_node *data = node->data_nodes;
         while (data != NULL)
         {
@@ -158,18 +195,4 @@ void hashmap_print(hashmap *map)
         printf("\n");
         node = node->next;
     }
-}
-
-hash_node *hashmap_find(hashmap *map, hash_t hash)
-{
-    hash_node *node = map->hash_nodes;
-    while (node != NULL)
-    {
-        if (map->compare(node->hash, hash) == 0)
-        {
-            return node;
-        }
-        node = node->next;
-    }
-    return NULL;
 }

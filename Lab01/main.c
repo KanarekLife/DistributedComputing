@@ -12,7 +12,7 @@ int compare(hash_t a, hash_t b)
 
 void print_int(data_t *n)
 {
-    printf("%d", (int)n);
+    printf("%ld", (long)n);
 }
 
 int main()
@@ -24,11 +24,15 @@ int main()
         hashmap_insert(map, (data_t *)data[i]);
     }
     hashmap_print(map);
-    printf("get(0) with deletion: %d\n", (unsigned int)hashmap_get(map, 0, true));
-    printf("get(2) with deletion: %d\n", (unsigned int)hashmap_get(map, 2, true));
-    printf("get(2) with deletion: %d\n", (unsigned int)hashmap_get(map, 2, true));
-    printf("get(8) with deletion: %d\n", (unsigned int)hashmap_get(map, 8, true));
-    printf("get(4) without deletion: %d\n", (unsigned int)hashmap_get(map, 4, true));
-    printf("get(5) with deletion: %d\n", (unsigned int)hashmap_get(map, 5, true));
+    printf("get(0) with deletion: %ld\n", (unsigned long)hashmap_get(map, 0, true));
+    printf("get(0) with deletion: %ld\n", (unsigned long)hashmap_get(map, 0, true));
+    printf("get(0) with deletion: %ld\n", (unsigned long)hashmap_get(map, 0, true));
+    printf("get(0) with deletion: %ld\n", (unsigned long)hashmap_get(map, 0, true));
+    printf("get(2) with deletion: %ld\n", (unsigned long)hashmap_get(map, 2, true));
+    printf("get(2) with deletion: %ld\n", (unsigned long)hashmap_get(map, 2, true));
+    printf("get(8) with deletion: %ld\n", (unsigned long)hashmap_get(map, 8, true));
+    printf("get(4) without deletion: %ld\n", (unsigned long)hashmap_get(map, 4, true));
+    printf("get(5) with deletion: %ld\n", (unsigned long)hashmap_get(map, 5, true));
+    hashmap_print(map);
     hashmap_destroy(map);
 }

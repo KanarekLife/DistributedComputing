@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef unsigned int hash_t;
+typedef unsigned long hash_t;
 typedef void data_t; // now data referenced in hashmap will be void* for data_t*
 
 typedef struct data_node_t
@@ -33,4 +33,3 @@ void hashmap_destroy(hashmap *map);
 bool hashmap_insert(hashmap *map, data_t *data);
 data_t *hashmap_get(hashmap *map, hash_t hash, bool shouldDeleteAfterRetrieval);
 void hashmap_print(hashmap *map);
-hash_node *hashmap_find(hashmap *map, hash_t hash);
