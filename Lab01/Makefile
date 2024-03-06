@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -g -Wall
 
 all: main
 
@@ -13,5 +13,4 @@ clean:
 	rm -f main
 
 check: main
-	ulimit -n 1024
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=valgrind-out.txt ./main
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./main

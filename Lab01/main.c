@@ -31,7 +31,8 @@ int main()
     printf("get(2) with deletion: %ld\n", (unsigned long)hashmap_get(map, 2, true));
     printf("get(2) with deletion: %ld\n", (unsigned long)hashmap_get(map, 2, true));
     printf("get(8) with deletion: %ld\n", (unsigned long)hashmap_get(map, 8, true));
-    printf("get(4) without deletion: %ld\n", (unsigned long)hashmap_get(map, 4, true));
+    printf("get(4) without deletion: %ld\n", (unsigned long)hashmap_get(map, 4, false));
+    printf("get(4) with deletion: %ld\n", (unsigned long)hashmap_get(map, 4, true));
     printf("get(5) with deletion: %ld\n", (unsigned long)hashmap_get(map, 5, true));
     hashmap_print(map);
     hashmap_destroy(map);
