@@ -26,10 +26,12 @@ typedef struct hashmap_t
     hash_t (*hash)(data_t *);
     int (*compare)(hash_t, hash_t);
     void (*print)(data_t *);
+    void (*free)(data_t *);
 } hashmap;
 
-hashmap *hashmap_create(hash_t (*hash)(data_t *), int (*compare)(hash_t, hash_t), void (*print)(data_t *));
+hashmap *hashmap_create(hash_t (*hash)(data_t *), int (*compare)(hash_t, hash_t), void (*print)(data_t *), void (*free)(data_t *));
 void hashmap_destroy(hashmap *map);
 bool hashmap_insert(hashmap *map, data_t *data);
-data_t *hashmap_get(hashmap *map, hash_t hash, bool shouldDeleteAfterRetrieval);
+// returns LIFO from bucket
+data_t *hashmap_get(hashmap *map, hash_t hash, bool shouldDetachFromHashMap);
 void hashmap_print(hashmap *map);

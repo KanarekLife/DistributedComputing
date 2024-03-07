@@ -32,7 +32,7 @@ void hashmap_print(hashmap *map)
     }
 }
 
-hashmap *hashmap_create(hash_t (*hash)(data_t *), int (*compare)(hash_t, hash_t), void (*print)(data_t *))
+hashmap *hashmap_create(hash_t (*hash)(data_t *), int (*compare)(hash_t, hash_t), void (*print)(data_t *), void (*free)(data_t *))
 {
     hashmap *map = malloc(sizeof(hashmap));
     if (map == NULL)
@@ -42,6 +42,7 @@ hashmap *hashmap_create(hash_t (*hash)(data_t *), int (*compare)(hash_t, hash_t)
     map->hash = hash;
     map->compare = compare;
     map->print = print;
+    map->free = free;
     map->hash_nodes = NULL;
     return map;
 }
@@ -56,6 +57,7 @@ void hashmap_destroy(hashmap *map)
         while (data != NULL)
         {
             data_node *next = data->next;
+            map->free(data->data);
             free(data);
             data = next;
         }
@@ -63,6 +65,7 @@ void hashmap_destroy(hashmap *map)
         node = next;
     }
     free(map);
+    map = NULL;
 }
 
 bool hashmap_insert(hashmap *map, data_t *data)
@@ -80,7 +83,6 @@ bool hashmap_insert(hashmap *map, data_t *data)
         node->data_nodes = NULL;
         node->prev = NULL;
 
-        // Find the correct position to insert the node in sorted order
         hash_node *current = map->hash_nodes;
         hash_node *prev = NULL;
         while (current != NULL && map->compare(current->hash, hash) < 0)
@@ -89,7 +91,6 @@ bool hashmap_insert(hashmap *map, data_t *data)
             current = current->next;
         }
 
-        // Insert the node at the correct position
         if (prev != NULL)
         {
             prev->next = node;
@@ -102,7 +103,7 @@ bool hashmap_insert(hashmap *map, data_t *data)
         node->next = current;
         if (current != NULL)
         {
-            current->prev = node; // Assign prev to the next node
+            current->prev = node;
         }
     }
 
@@ -115,7 +116,6 @@ bool hashmap_insert(hashmap *map, data_t *data)
     new_data->prev = NULL;
     new_data->next = NULL;
 
-    // Find the correct position to insert the data in sorted order
     data_node *current = node->data_nodes;
     data_node *prev = NULL;
     while (current != NULL && map->compare(map->hash(current->data), hash) < 0)
@@ -124,7 +124,6 @@ bool hashmap_insert(hashmap *map, data_t *data)
         current = current->next;
     }
 
-    // Insert the data at the correct position
     if (prev != NULL)
     {
         prev->next = new_data;
@@ -143,7 +142,7 @@ bool hashmap_insert(hashmap *map, data_t *data)
     return true;
 }
 
-data_t *hashmap_get(hashmap *map, hash_t hash, bool shouldDeleteAfterRetrieval)
+data_t *hashmap_get(hashmap *map, hash_t hash, bool shouldDetachFromHashMap)
 {
     hash_node *node = hashmap_find(map, hash);
     if (node == NULL)
@@ -156,7 +155,7 @@ data_t *hashmap_get(hashmap *map, hash_t hash, bool shouldDeleteAfterRetrieval)
         if (map->compare(map->hash(data->data), hash) == 0)
         {
             data_t *ret = data->data;
-            if (shouldDeleteAfterRetrieval)
+            if (shouldDetachFromHashMap)
             {
                 if (data->prev != NULL)
                 {
@@ -170,9 +169,9 @@ data_t *hashmap_get(hashmap *map, hash_t hash, bool shouldDeleteAfterRetrieval)
                 {
                     data->next->prev = data->prev;
                 }
+                
                 free(data);
 
-                // Delete empty hash_node if no data_t remains
                 if (node->data_nodes == NULL)
                 {
                     if (node->prev != NULL)
