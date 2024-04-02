@@ -1,0 +1,42 @@
+sequenceDiagram
+    actor  Gracz1
+    participant  Serwer
+    actor  Gracz2
+    alt W przypadku przepełnionego serwera, ten może odrzucić połączenie
+    Gracz2 ->> Serwer: connect
+    Serwer ->> Gracz2: refuse
+    end
+
+    Gracz1 ->> Serwer: connect
+    loop 5 razy
+    Serwer ->> Gracz1: ping
+    Gracz1 ->> Serwer: pong
+    end
+    Note over Gracz1, Serwer: Ustalanie opóźnienia połączenia
+    Serwer ->> Gracz1: setPlayerId
+    Serwer ->> Gracz1: gameState
+
+    Gracz2 ->> Serwer: connect
+    loop 5 razy
+    Serwer ->> Gracz2: ping
+    Gracz2 ->> Serwer: pong
+    end
+    Note over Gracz2, Serwer: Ustalanie opóźnienia połączenia
+    Serwer ->> Gracz2: setPlayerId
+    Serwer ->> Gracz2: gameState
+
+    loop gracze wysyłają swój stan gry co 100ms - 1s w zależności od gęstości wydarzeń
+        Gracz1 ->> Serwer: gameState
+        Gracz2 ->> Serwer: gameState
+        
+    end
+
+    loop wysyła jednocześnie do wszystkich graczy co 100 ms
+        Serwer ->> Gracz1: gameState
+        Serwer ->> Gracz2: gameState
+    end
+
+    Gracz1 ->> Serwer: disconnect
+    Serwer ->> Gracz1: disconnect
+    Gracz2 ->> Serwer: disconnect
+    Serwer ->> Gracz2: disconnect

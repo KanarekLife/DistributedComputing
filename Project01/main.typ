@@ -1,86 +1,167 @@
-= Tanks - sprawozdanie
+#set page(
+  paper: "a4",
+  margin: 1.5cm
+)
 
-Stanisław Nieradko
-Bartłomiej Krawisz
-Jakub Bronowski
+= Tanks - dokumentacja
+
+Stanisław Nieradko, Bartłomiej Krawisz, Jakub Bronowski
 
 == 1. Wprowadzenie
 
-Celem projektu było stworzenie gry w języku Python, która będzie symulacją bitwy czołgów obsługującą kilku graczy. Gracze sterują czołgami, które poruszają się po planszy i strzelają do siebie. Gra kończy się gdy wszyscy poza 1 graczem zostaną zniszczeni. Gracz, który pozostał na planszy wygrywa.
+Celem projektu było stworzenie gry sieciowej czasu rzeczywistego, która będzie symulacją bitwy czołgów obsługującą kilku graczy. Gracze sterują czołgami, które poruszają się po planszy i strzelają do siebie. Gra kończy się zwycięstwem gracza który zdoła pokonać resztę graczy.
+
+Projekt zaimplementowaliśmy w języku Python bez wykorzystynia zewnętrznych bibliotek. Gra działa w trybie serwer-klient, gdzie serwer zarządza grą, a klienci sterują czołgami. Zarówno serwer jak i klient wykorzystują natywną Pythonowi współbieżność opartą o wątki (wbudowana biblioteka `threading`) w celu płynnej i jednoczesnej komunikacji sieciowej oraz obsługi gry.
 
 == 2. Model Komunikacji
 
-Gra wykorzystuje protokół TCP do komunikacji między klientami a serwerem. Wybór ten został dokonany ze wzglądu na wystarczającą wydajność względem UDP oraz prostotę implementacji.
+Gra wykorzystuje protokół TCP do komunikacji między klientami a serwerem. Wybór ten został dokonany ze wzglądu na wystarczającą wydajność względem UDP i prostotę implementacji. Podczas testowania eksperymentalnej implementacji opartej o UDP, zauważyliśmy że różnice w opóźnieniach były na tyle małe, że nie wpływały one znacznie na rozgrywkę.
 
-Zdarzenie przesyłane z oraz do serwera są w formacie JSON, wg. poniższego schematu:
+Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danych oraz nieograniczone możliwości rozbudowy. W celu odseparowania poszczególnych zdarzeń, każde zdarzenie jest zakończone znakiem `NULL`.
 
-#table(
-  columns: (1fr, 2fr, 4fr),
-  table.header(
-    [Nazwa], [Typ], [Opis]
+// Jeżeli możemy zastosować JSON to można by dodać JSON Schema w celu poprawy czytelności i zrozumienia danych
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    table.header(
+      [Nazwa], [Typ], [Opis]
+    ),
+    `event_type`, "str", box[
+      Typ zdarzenia (możliwe typy zdarzenia: `connect`, `refuse`, `ping`, `pong`, `setPlayerId`, `gameState`, `disconnect`)
+    ],
+    `time`, "int", "Czas zdarzenia [unix timestamp]",
+    `data`, "object", box[Dane zdarzenia (zależne od `event_type`)]
   ),
-  `event_type`, "string", box[
-    Typ zdarzenia (`connect`, `refuse`, `ping`, `pong`, `setPlayerId`, `gameState`, `disconnect`)
-  ],
-  `time`, "uint64", "Czas zdarzenia [unix timestamp]",
-  `data`, "object", box[Dane zdarzenie (zależne od `event_type`)],
-  [], "char", "NULL kończący wiadomość"
+  caption: "Struktura zdarzenia"
 )
 
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    table.header([Nazwa], [Typ], [Opis]),
+    `serverTime`, "int", "Czas serwera [unix timestamp]",
+  ),
+  caption: box[Struktura obiektu `data` dla zdarzenia `pong`]
+)
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    table.header([Nazwa], [Typ], [Opis]),
+    `playerId`, "int", "Identyfikator gracza",
+  ),
+  caption: box[Struktura obiektu `data` dla zdarzenia `setPlayerId`]
+)
+
+#figure(
+  table(
+    columns: (auto, auto, auto, auto),
+    table.header([Nazwa], [Typ], [Czy opcjonalne], [Opis]),
+    `tanks`, "dic[int, Tank]", "Tak", "Obiekty czołgów",
+    `bullets`, "list[Bullet]", "Tak", "Tablica obiektów pocisków",
+    `map`, "list[Obstacle]", "Tak", "Tablica przeszkód na mapie",
+    `isGameOver`, "bool", "Nie", "Czy gra się zakończyła?",
+  ),
+  caption: box[Struktura obiektu `data` dla zdarzenia `gameState`]
+)
+
+
+#pagebreak()
 Przykładowe zdarzenia:
 
-```json
-{"eventType":"connect","time":1711291958}
+#text(size: 11pt)[
+  ```json
+  // Zdarzenie connect
+  {"eventType":"connect","time":1711291958}
 
-{"eventType":"refuse","time":1711291958}
+  // Zdarzenie refuse
+  {"eventType":"refuse","time":1711291958}
 
-{"eventType":"ping","time":1711293829}
+  // Zdarzenie ping
+  {"eventType":"ping","time":1711293829}
 
-{"eventType":"pong","time":1711295934,"data":{ "serverTime":1711293829 }}
+  // Zdarzenie pong
+  {"eventType":"pong","time":1711295934,"data":{"serverTime":1711293829}}
 
-{"eventType":"setPlayerId","time":1711301024,"data": 2}
+  // Zdarzenie setPlayerId
+  {"eventType":"setPlayerId","time":1711295934,"data":{"playerId":2}}
 
-{"eventType":"gameState","time":1711293829,"data": {
-    "tanks": {
-        "1": { "x": 115.2, "y": 254.32, "direction": 1, "speed": 100, "score": 50, "alive": true },
-        "2": { "x": 34.2, "y": 74.32, "direction": 0, "speed": 0, "score": 0, "alive": false }
-    },
-    "bullets": [
-        { "x": 115.2, "y": 254.32, "direction": 1, "speed": 100, "playerId": 2 },
-        { "x": 34.2, "y": 74.32, "direction": 0, "speed": 0, "playerId": 1 }
-    ],
-    "isGameOver": false
-}}
-
-{"eventType":"disconnect","time":1711895043}
-```
+  // Zdarzenie gameState
+  {
+    "eventType": "gameState",
+    "time": 1711293829,
+    "data": {
+        "tanks": {
+          "1": {
+              "x": 115.2,
+              "y": 254.32,
+              "direction": 1,
+              "speed": 100,
+              "score": 50,
+              "alive": true
+          },
+          "2": {
+              "x": 34.2,
+              "y": 74.32,
+              "direction": 0,
+              "speed": 0,
+              "score": 0,
+              "alive": false
+          }
+        },
+        "bullets": [
+          {
+              "x": 115.2,
+              "y": 254.32,
+              "direction": 1,
+              "speed": 100,
+              "playerId": 2
+          },
+          {
+              "x": 34.2,
+              "y": 74.32,
+              "direction": 0,
+              "speed": 0,
+              "playerId": 1
+          }
+        ],
+        "map": [{"x":51,"y":24,"type":1},{"x":23,"y":11,"type":3},{"x":0,"y":5,"type":0}],
+        "isGameOver": false
+    }
+  }
+  ```
+]
 
 #pagebreak()
 
 === 2.2 Diagram Sekwencji
 
-#align(center, image("imgs/sequence_diagram.svg", height: 90%))
+#align(center, image("imgs/sequence.png", height: 90%))
 
-#link("https://mermaid.live/edit#pako:eNq9lF1vmzAUhv-KZe0i0UgUQ0IL6nqxZesq7aNqMk1aqSYPn3bWjEHGTE2j_PfZOMWQdLscF9h-ztd7jM0W5yUDnOJc0LpecnqvaJFJZJ6WoCVXkGteyq2j9jk7A9kUoKjl5-fe8OUKvUIzv15-_vrJEOLJh7fv1oaEnlxfXry3KHJol8l--TWVv3qVX6I7UVKNHo7Rpo861Yg9zY4j6gqAHVTtAicTW3oo5nUjBOj_IMdhLjWqBN2AuvyHTCdqKPSCFrDSVMNAK-O5vjFJA9vZLdLmXfftgtf6xqW7RT_asT6MRzUoTgV_hNHY2174ioiBd3ERFo8PGuj8n_b5AP6tq0FDlLHWfeSrt8WC_Y5qXoABRTXuR3nne9DdYl1eg2SgRvuPYdl3m-A55ZNJFzeU-EZwkPaEPHuYV6B-g0LHZhfmsjriXB3BATaXraCcmXvabkCG9U8wrjg1UwmNVlRkOJM740obXa42MsepVg0EuKmYkbm_2Ti9o6I2tKISp1v8gFMSzadxEpJFlESzOJ7P4gBvcBrNoyk5CRdkcRonxNBdgB_L0mSYTeOYEBKfhEkUzmOSLAIMjOtSfdz_SuzQlvjWBlgduz871VPN", "Źródło: mermaid.live")
+#pagebreak()
 
-=== 2.3 Schemat działania aplikacji
+=== 2.3 Opis działania aplikacji
 
-Gracze dołączają do serwera poprzez wysłanie zdarzenia `connect`. Po 3 krotnej wymianie zdarzeń `ping` (ze strony serwera) oraz `pong` (ze strony użytkonika) w celu ustalenia opóźnienia (z ang. _latency_) połączenia. Po ustaleniu opóźnienia serwer odpowiada zdarzeniem `setPlayerId` z przypisanym identyfikatorem gracza oraz zdarzeniem `gameState` z aktualnym stanem gry.
+Gracze dołączają do serwera poprzez wysłanie zdarzenia `connect`. Następuje 5 krotna wymiana zdarzeń `ping` (ze strony serwera) oraz `pong` (ze strony użytkonika) w celu ustalenia opóźnienia (z ang. _latency_) połączenia. Następnie serwer przesyła zdarzenie `setPlayerId` (z przypisanym identyfikatorem gracza) oraz zdarzenie `gameState` (z aktualnym stanem oraz mapą gry) do użytkownika. Jeżeli okazałoby się że serwer jest przepełniony zamiast tego zostanie przesłane zdarzenie `refuse` zamykające połączenie.
 
-W przypadku przepełnienia serwera, serwer wysyła zdarzenie `refuse` i zamyka połączenie.
+Podczas gry gracze przesyłają lokalny stan swojego czołgu co 100ms - 1s (w zależności od ilości lokalnych zmian) w formie zdarzenia `gameState`. Serwer odbiera zdarzenia od wszystkich graczy, rozwiązuje konflikty, łączy je w jeden spójny stan i przesyła do wszystkich graczy w formie zdarzenia `gameState`. Ta operacja wykonywana jest co 100ms.
 
-Podczas gry co 100ms zarówno serwer wysyła każdemu graczowi zdarzenie `gameState` z aktualnym stanem gry, jak i każdy gracz stara się wysłać zdarzenie `gameState` z aktualnym stanem swojego czołgu.
+Po spełnieniu warunków zakończenia potyczki (pozostanie jeden gracz na planszy), serwer wysyła zdarzenie `gameState` z `isGameOver` ustawionym na `true`, co informuje klientów iż gra się zakończyła i po 3s serwer rozpoczyna nową grę pozwalając graczom na dalszą jej kontynuację.
 
-Gdy gra kończy się (po zniszczeniu wszystkich graczy poza jednym), serwer wysyła zdarzenie `gameState` z `isGameOver` ustawionym na `true`, co informuje klientów iż gra się zakończyła. Po 3s serwer rozpoczyna nową grę.
+W celu rozłączenia się z serwerem gracz wysyła zdarzenie `disconnect` (w wyniku którego otrzymuje on także zwrotne zdarzenie `disconnect` od serwera jako potwierdzenie). Możliwe jest także otrzymanie takiego zdarzenia w przypadku awarii lub zakończenia pracy serwera (zostaje ono wysłane do wszystkich graczy).
 
-W celu rozłączenia się z serwerem gracz wysyła zdarzenie `disconnect` (w wyniku którego otrzymuje on także zwrotne zdarzenie `disconnect` od serwera w celu potwierdzenia).
+=== 2.3 Potencjalne elementy krytyczne
 
-W przypadku zakończenia pracy serwera, zostaje nadaane zdarzenie `disconnect` dla każdego gracza.
+Najważniejszym pod względem spójności elementem gry jest obiekt `GameState` przechowujący jej stan. W celu ochrony jego spójności zastosowaliśmy mechanizm blokady Read-Write, umożliwiający jednoczesny odczyt przez wiele wątków oraz wyłączny zapis przez jeden wątek. Dzięki temu zapewniamy, że stan gry jest zawsze spójny i niezmienny podczas odczytu.
+
+Kolejnym elementem krytycznym jest obsługa zdarzeń. W celu zapewnienia spójności, zdarzenia są przetwarzane w kolejności ich otrzymania w sposób synchroniczny (po jednym zdarzeniu na raz) przez główny wątek serwera po pobraniu z kolejki zdarzeń. Dzięki temu zapewniamy, że zdarzenia są przetwarzane w kolejności ich otrzymania i nie dochodzi do konfliktów.
+
+#pagebreak()
 
 === 2.3 Diagramy klas
 
-#align(center, image("imgs/class_diagram.png"))
-#link("https://mermaid.live/edit#pako:eNq9k11PwjAUhv9K03gBcRd-3BHkwqBI4lcA4wUj5rgesbHtlvYsEQn_3XYbdAjXdsnaPqen5927ds2zXCDv8UyBc0MJSws6Ncy3irChtJiRzM26pqH1-2hKjRYCHwxi4OWZXbGzOB8-vT56ch7J_c3tzJOLSCbj0V1AlzXapCY8UcAINE4JCFsCTpmQGc2loWQG5mvByL9dO66ko_l1qRTSgr1XvfubzxxaCUr-YKcbYyexIhMYl9QZAXdbSqPOIGRP4ofKgdj3IVq10c5fL6kZHWa4AlEcrVp_4j_UrbF3nBUKVmjHx_UE7_bUgBCVl53oamVi0pQgqdEDXXTbWXHxEmk3meUTNAJtp1EX2FvYYPtHeML9sdQghT_RlYyU0ydqTHnPDw2WZEGlPDVhKZSUT1cm4z2yJSa8LITfsLkDW4hCUm4fmksSus0vZHj23w", "Żródło: mermaid.live")
+#align(center, image("imgs/class.png", width: 60%))
 
 == 3. FAQ
 

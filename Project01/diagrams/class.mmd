@@ -1,0 +1,75 @@
+classDiagram
+    class Direction{
+        <<enumeration>>
+        UP = 0
+        DOWN = 1
+        LEFT = 2
+        RIGHT = 3
+    }
+
+    class Tank{
+        float x
+        float y
+        Direction direction
+        float speed
+    }
+
+    Direction--Tank
+
+    class Bullet{
+        float x
+        float y
+        Direction direction
+        float speed
+        int playerId
+    }
+
+    class ObstacleType{
+        <<enumeration>>
+        RED = 0
+        GREEN = 1
+        BLUE = 2
+    }
+
+
+    class Obstacle {
+        float x
+        float y
+        ObstacleType type
+    }
+
+    Obstacle--ObstacleType
+
+    Direction--Bullet
+
+    class GameState{
+        dict[int,Tank] tanks
+        list[Bullet] bullets
+        list[Obstacle] map
+        dict serialize()
+        $ GameState deserialize(dict state)
+    }
+
+    GameState--Tank
+    GameState--Bullet
+
+    class Game{
+        addState(GameState state, float timestamp)
+        GameState getGameStateToRender(float state_time)
+    }
+
+    Game--GameState
+
+    class Client{
+        __init__(Game game)
+        start(str host, int port)
+        stop()
+    }
+
+    class Server {
+        start()
+        stop()
+    }
+
+    Client--Game
+    Server--Game
