@@ -1,11 +1,73 @@
 #set page(
   paper: "a4",
-  margin: 1.5cm
+  margin: 1.5cm,
+  numbering: "1 / 1",
+  footer: context [
+    #set text(8pt)
+    *Tanks* - dokumentacja
+    #h(1fr)
+    #counter(page).display(
+      "1 / 1",
+      both: true
+    )
+  ]
 )
 
-= Tanks - dokumentacja
+#set document(
+  title: "Tanks - dokumentacja",
+  author: "Stanisław Nieradko, Bartłomiej Krawisz, Jakub Bronowski",
+)
 
-Stanisław Nieradko, Bartłomiej Krawisz, Jakub Bronowski
+#set text(font: "Lato")
+
+#set ref(supplement: it => {
+  it.supplement.text.replace("Table", "Tabela")
+})
+
+#show figure.caption: it => [
+  #if it.supplement == [Figure] [
+    Rysunek  #it.counter.display()#it.separator #it.body
+  ] else if it.supplement == [Table] [
+    Tabela  #it.counter.display()#it.separator #it.body
+  ] else [
+    #it.supplement #it.numbering#it.separator #it.body
+  ]
+]
+
+#page[
+  #align(horizon + center)[
+    #stack(
+      dir: ttb,
+      text(size: 36pt, weight: "semibold")[
+        #stack(
+          dir: ltr,
+          image("imgs/tank-icon.svg", height: 36pt),
+          h(10pt),
+          text[Tanks]
+        )
+      ],
+      v(15pt),
+      text(size: 14pt, weight: "semibold")[Dokumentacja projektu zespołowego na przedmiot Przetwarzanie Rozproszone],
+      v(25pt),
+      grid(
+        columns: (auto, auto, auto),
+        column-gutter: 25pt,
+        row-gutter: 10pt,
+        [Stanisław Nieradko], [Bartłomiej Krawisz], [Jakub Bronowski],
+        [193044], [193319], [193208]
+      ),
+      v(100pt),
+      image("imgs/logo.png"),
+    )
+  ]
+]
+
+#page[
+  #outline(
+    title: "0. Spis treści",
+    indent: 20pt,
+  )
+]
 
 == 1. Wprowadzenie
 
@@ -23,7 +85,7 @@ Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danyc
 
 #figure(
   table(
-    columns: (auto, auto, auto),
+    columns: (1fr, 1fr, 5fr),
     table.header(
       [Nazwa], [Typ], [Opis]
     ),
@@ -38,7 +100,7 @@ Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danyc
 
 #figure(
   table(
-    columns: (auto, auto, auto),
+    columns: (1fr, 1fr, 5fr),
     table.header([Nazwa], [Typ], [Opis]),
     `serverTime`, "int", "Czas serwera [unix timestamp]",
   ),
@@ -47,7 +109,7 @@ Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danyc
 
 #figure(
   table(
-    columns: (auto, auto, auto),
+    columns: (1fr, 1fr, 5fr),
     table.header([Nazwa], [Typ], [Opis]),
     `playerId`, "int", "Identyfikator gracza",
   ),
@@ -56,7 +118,7 @@ Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danyc
 
 #figure(
   table(
-    columns: (auto, auto, auto, auto),
+    columns: (1fr, 1fr, 1fr, 4fr),
     table.header([Nazwa], [Typ], [Czy opcjonalne], [Opis]),
     `tanks`, "dic[int, Tank]", "Tak", "Obiekty czołgów",
     `bullets`, "list[Bullet]", "Tak", "Tablica obiektów pocisków",
@@ -67,81 +129,83 @@ Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danyc
 )
 
 
-#pagebreak()
-Przykładowe zdarzenia:
+#page[
+  === 2.1. Przykładowe zdarzenia:
 
-#text(size: 11pt)[
-  ```json
-  // Zdarzenie connect
-  {"eventType":"connect","time":1711291958}
+  #text(size: 11pt)[
+    ```json
+    // Zdarzenie connect
+    {"eventType":"connect","time":1711291958}
 
-  // Zdarzenie refuse
-  {"eventType":"refuse","time":1711291958}
+    // Zdarzenie refuse
+    {"eventType":"refuse","time":1711291958}
 
-  // Zdarzenie ping
-  {"eventType":"ping","time":1711293829}
+    // Zdarzenie ping
+    {"eventType":"ping","time":1711293829}
 
-  // Zdarzenie pong
-  {"eventType":"pong","time":1711295934,"data":{"serverTime":1711293829}}
+    // Zdarzenie pong
+    {"eventType":"pong","time":1711295934,"data":{"serverTime":1711293829}}
 
-  // Zdarzenie setPlayerId
-  {"eventType":"setPlayerId","time":1711295934,"data":{"playerId":2}}
+    // Zdarzenie setPlayerId
+    {"eventType":"setPlayerId","time":1711295934,"data":{"playerId":2}}
 
-  // Zdarzenie gameState
-  {
-    "eventType": "gameState",
-    "time": 1711293829,
-    "data": {
-        "tanks": {
-          "1": {
-              "x": 115.2,
-              "y": 254.32,
-              "direction": 1,
-              "speed": 100,
-              "score": 50,
-              "alive": true
+    // Zdarzenie gameState
+    {
+      "eventType": "gameState",
+      "time": 1711293829,
+      "data": {
+          "tanks": {
+            "1": {
+                "x": 115.2,
+                "y": 254.32,
+                "direction": 1,
+                "speed": 100,
+                "score": 50,
+                "alive": true
+            },
+            "2": {
+                "x": 34.2,
+                "y": 74.32,
+                "direction": 0,
+                "speed": 0,
+                "score": 0,
+                "alive": false
+            }
           },
-          "2": {
-              "x": 34.2,
-              "y": 74.32,
-              "direction": 0,
-              "speed": 0,
-              "score": 0,
-              "alive": false
-          }
-        },
-        "bullets": [
-          {
-              "x": 115.2,
-              "y": 254.32,
-              "direction": 1,
-              "speed": 100,
-              "playerId": 2
-          },
-          {
-              "x": 34.2,
-              "y": 74.32,
-              "direction": 0,
-              "speed": 0,
-              "playerId": 1
-          }
-        ],
-        "map": [{"x":51,"y":24,"type":1},{"x":23,"y":11,"type":3},{"x":0,"y":5,"type":0}],
-        "isGameOver": false
+          "bullets": [
+            {
+                "x": 115.2,
+                "y": 254.32,
+                "direction": 1,
+                "speed": 100,
+                "playerId": 2
+            },
+            {
+                "x": 34.2,
+                "y": 74.32,
+                "direction": 0,
+                "speed": 0,
+                "playerId": 1
+            }
+          ],
+          "map": [{"x":51,"y":24,"type":1},{"x":23,"y":11,"type":3},{"x":0,"y":5,"type":0}],
+          "isGameOver": false
+      }
     }
-  }
-  ```
+    ```
+  ]
 ]
 
+=== 2.2. Diagram Sekwencji
+
+#figure(
+  image("imgs/sequence.png", height: 95%),
+  caption: "Diagram sekwencji"
+)
+
 #pagebreak()
 
-=== 2.2 Diagram Sekwencji
-
-#align(center, image("imgs/sequence.png", height: 90%))
-
-#pagebreak()
-
-=== 2.3 Opis działania aplikacji
+== 3. Opis działania aplikacji
 
 Gracze dołączają do serwera poprzez wysłanie zdarzenia `connect`. Następuje 5 krotna wymiana zdarzeń `ping` (ze strony serwera) oraz `pong` (ze strony użytkonika) w celu ustalenia opóźnienia (z ang. _latency_) połączenia. Następnie serwer przesyła zdarzenie `setPlayerId` (z przypisanym identyfikatorem gracza) oraz zdarzenie `gameState` (z aktualnym stanem oraz mapą gry) do użytkownika. Jeżeli okazałoby się że serwer jest przepełniony zamiast tego zostanie przesłane zdarzenie `refuse` zamykające połączenie.
 
@@ -151,47 +215,48 @@ Po spełnieniu warunków zakończenia potyczki (pozostanie jeden gracz na plansz
 
 W celu rozłączenia się z serwerem gracz wysyła zdarzenie `disconnect` (w wyniku którego otrzymuje on także zwrotne zdarzenie `disconnect` od serwera jako potwierdzenie). Możliwe jest także otrzymanie takiego zdarzenia w przypadku awarii lub zakończenia pracy serwera (zostaje ono wysłane do wszystkich graczy).
 
-=== 2.3 Potencjalne elementy krytyczne
+== 4. Potencjalne elementy krytyczne
 
 Najważniejszym pod względem spójności elementem gry jest obiekt `GameState` przechowujący jej stan. W celu ochrony jego spójności zastosowaliśmy mechanizm blokady Read-Write, umożliwiający jednoczesny odczyt przez wiele wątków oraz wyłączny zapis przez jeden wątek. Dzięki temu zapewniamy, że stan gry jest zawsze spójny i niezmienny podczas odczytu.
 
 Kolejnym elementem krytycznym jest obsługa zdarzeń. W celu zapewnienia spójności, zdarzenia są przetwarzane w kolejności ich otrzymania w sposób synchroniczny (po jednym zdarzeniu na raz) przez główny wątek serwera po pobraniu z kolejki zdarzeń. Dzięki temu zapewniamy, że zdarzenia są przetwarzane w kolejności ich otrzymania i nie dochodzi do konfliktów.
 
-#pagebreak()
+== 5. Diagramy klas
 
-=== 2.3 Diagramy klas
+#figure(
+  image("imgs/class.png", width: 45%),
+  caption: "Diagram klas"
+)
 
-#align(center, image("imgs/class.png", width: 60%))
+== 6. FAQ
 
-== 3. FAQ
-
-=== TCP vs UDP
+=== 6.1. TCP vs UDP
 
 Po przetestowaniu obu protokołów, zdecydowaliśmy się na TCP ze względu na mniejszą ilość problemów związanych z przesyłem danych oraz wystarczającą wydajność do naszych zastosowań.
 
 Mimo, iż UDP jest szybszy, to implementacja gry w tym protokole wymagałaby dodatkowego nakładu pracy. W przypadku TCP, odnotowane opóźnienia względem implementacji korzystającej z UDP były na tyle małe, że nie miały one wpływu na rozgrywkę.
 
-=== W jaki sposób radzimy sobie z sytuacją w której klient, przestał przesyłać informacje?
+=== 6.2. W jaki sposób radzimy sobie z sytuacją w której klient, przestał przesyłać informacje?
 
 W przypadku gdy klient przestaje przesyłać informacje, serwer po 5s od ostatniego zdarzenia wysyła zdarzenie `disconnect` w celu rozłączenia klienta. W momencie wysyłania zdarzenia czołg klienta zostaje natychmiast usunięty z gry.
 
 W międzyczasie serwer będzie "symulował" zachowanie czołgu poprzez ekstrapolację przez co najwyżej 0,5s. Po tym czasie czołg klienta zatrzyma się w miejscu.
 
-=== W jaki sposób radzimy sobie z sytuacją w której serwer, przestał przesyłać informacje?
+=== 6.3. W jaki sposób radzimy sobie z sytuacją w której serwer, przestał przesyłać informacje?
 
 Klient symuluje zachowania czołgów innych graczy dzięki ekstrapolacji (przez maks. 0,5s). Jeżeli do tego czasu nie uda się przywrócić połączenia z serwerem, klient zakończy grę (lokalnie) i pokaże komunikat o problemach z połączeniem.
 
-=== W jaki sposób radzimy sobie z opóźnieniami przesyłu i/lub zakolejkowanymi wiadomościami?
+=== 6.4. W jaki sposób radzimy sobie z opóźnieniami przesyłu i/lub zakolejkowanymi wiadomościami?
 
 Serwer wykorzystuje asynchroniczny model przetwarzania zdarzeń, co pozwala na obsługę kolejnych zdarzeń podczas wysyłania i oczekiwania na ukończenie połączenia. Wszystkie zdarzenia są przetwarzane w kolejności ich otrzymania, także w przypadku opóźnień po stronie klienta, tak szybko jak nadejdą opóźnione zdarzenia, zostaną one obsłużone.
 
 Podczas gry, gdy zdarzenia klienta nie dochodzą do serwera, ten ekstrapoluje ruch czołgu (przez 0,5s) klienta na podstawie ostatnich danych otrzymanych od klienta i przesyła je do pozostałych graczy. Po oknie ekstrapolacji ale przed wyrzuceniem gracza z powodu nieaktywności, czołg klienta nie porusza się. W przypadku gdy klient znów zacznie przesyłać dane, serwer cofnie czołg klienta do pozycji sprzed maks. 0,5s i zaakceptuje dane od klienta tak długo jak nie są one starsze niż 0,5s. W innym wypadku pozycja czołgu klienta będzie taka sama jak po cofnięciu.
 
-=== W jaki sposób werfyikujemy, że dane zostały przesłane w całości?
+=== 6.5. W jaki sposób werfyikujemy, że dane zostały przesłane w całości?
 
 Dzięki wykorzystaniu JSON'a jako medium przesyłu danych, serwer jest w stanie sprawdzić czy dane zostały przesłane w całości. W przypadku błędu w przesłaniu danych, serwer odrzuca zdarzenie i oczekuje na kolejne. Każda wiadomość musi być zakończona znakiem `NULL` w celu odseparowania poszczególnych JSON'ów.
 
-=== W jaki sposób radzimy sobie z sytuacją gdy pakiet "zagubi się" i nie dotrze poprawnie do/z serwera?
+=== 6.6. W jaki sposób radzimy sobie z sytuacją gdy pakiet "zagubi się" i nie dotrze poprawnie do/z serwera?
 
 TCP zapewnia, że dane zostaną dostarczone w całości i w odpowiedniej kolejności. W przypadku gdy pakiet zostanie "zagubiony", TCP ponownie wyśle dane. W przypadku gdy pakiet nie dotrze do serwera, klient ponownie wyśle dane.
 
