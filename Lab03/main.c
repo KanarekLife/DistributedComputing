@@ -7,8 +7,8 @@ int main()
 {
     int n = 5;
     pid_t child_to_wait;
+    pid_t child_to_kill;
     pid_t pid;
-
 process:
     if (n == 0)
     {
@@ -32,7 +32,7 @@ process:
         }
         else
         {
-            wait(NULL);
+            pause();
             return 0;
         }
     }
@@ -42,6 +42,10 @@ process:
         if (n % 2 == 1)
         {
             child_to_wait = pid;
+        }
+        else
+        {
+            child_to_kill = pid;
         }
     }
 
@@ -62,7 +66,7 @@ process:
         }
         else
         {
-            wait(NULL);
+            pause();
             return 0;
         }
     }
@@ -73,9 +77,14 @@ process:
         {
             child_to_wait = pid;
         }
+        else
+        {
+            child_to_kill = pid;
+        }
     }
 
     waitpid(child_to_wait, NULL, 0);
+    kill(child_to_kill, SIGKILL);
     return 0;
 
 end:
