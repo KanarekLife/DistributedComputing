@@ -9,85 +9,85 @@ int main()
     pid_t child_to_wait;
     pid_t child_to_kill;
     pid_t pid;
-process:
-    if (n == 0)
+    while (1)
     {
-        goto end;
-    }
-
-    pid = fork();
-    if (pid < 0)
-    {
-        fprintf(stderr, "failed to fork\n");
-        return 1;
-    }
-
-    if (pid == 0)
-    {
-        // Child process
-        if (n % 2 == 1)
+        if (n == 0)
         {
-            n -= 1;
-            goto process;
+            break;
+        }
+
+        pid = fork();
+        if (pid < 0)
+        {
+            fprintf(stderr, "failed to fork\n");
+            return 1;
+        }
+
+        if (pid == 0)
+        {
+            // Child process
+            if (n % 2 == 1)
+            {
+                n -= 1;
+                continue;
+            }
+            else
+            {
+                pause();
+                return 0;
+            }
         }
         else
         {
-            pause();
-            return 0;
+            // Parent process
+            if (n % 2 == 1)
+            {
+                child_to_wait = pid;
+            }
+            else
+            {
+                child_to_kill = pid;
+            }
         }
-    }
-    else
-    {
-        // Parent process
-        if (n % 2 == 1)
+
+        pid = fork();
+        if (pid < 0)
         {
-            child_to_wait = pid;
+            fprintf(stderr, "failed to fork\n");
+            return 1;
+        }
+
+        if (pid == 0)
+        {
+            // Child process
+            if (n % 2 == 0)
+            {
+                n -= 1;
+                continue;
+            }
+            else
+            {
+                pause();
+                return 0;
+            }
         }
         else
         {
-            child_to_kill = pid;
+            // Parent process
+            if (n % 2 == 0)
+            {
+                child_to_wait = pid;
+            }
+            else
+            {
+                child_to_kill = pid;
+            }
         }
-    }
 
-    pid = fork();
-    if (pid < 0)
-    {
-        fprintf(stderr, "failed to fork\n");
-        return 1;
+        waitpid(child_to_wait, NULL, 0);
+        kill(child_to_kill, SIGKILL);
+        return 0;
     }
-
-    if (pid == 0)
-    {
-        // Child process
-        if (n % 2 == 0)
-        {
-            n -= 1;
-            goto process;
-        }
-        else
-        {
-            pause();
-            return 0;
-        }
-    }
-    else
-    {
-        // Parent process
-        if (n % 2 == 0)
-        {
-            child_to_wait = pid;
-        }
-        else
-        {
-            child_to_kill = pid;
-        }
-    }
-
-    waitpid(child_to_wait, NULL, 0);
-    kill(child_to_kill, SIGKILL);
-    return 0;
-
-end:
     pid = fork();
 
     if (pid == 0)
