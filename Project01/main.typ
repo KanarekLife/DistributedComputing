@@ -81,11 +81,11 @@
 
 Celem projektu było stworzenie gry sieciowej czasu rzeczywistego, która będzie symulacją bitwy czołgów obsługującą kilku graczy. Gracze sterują czołgami, które poruszają się po planszy i strzelają do siebie. Gra kończy się zwycięstwem gracza, który zdoła pokonać resztę graczy.
 
-Projekt zaimplementowaliśmy w języku Python bez wykorzystania zewnętrznych bibliotek. Gra działa w trybie serwer-klient, gdzie serwer zarządza grą a klienci sterują czołgami. Zarówno serwer jak i klient wykorzystują natywną Pythonowi współbieżność opartą o wątki (wbudowana biblioteka `threading`) w celu płynnej i jednoczesnej komunikacji sieciowej oraz obsługi gry.
+Projekt zaimplementowaliśmy w języku Python bez wykorzystania zewnętrznych bibliotek. Gra działa w trybie serwer-klient, gdzie serwer zarządza grą a klienci sterują czołgami. Zarówno serwer jak i klient wykorzystują natywną Pythonowi współbieżność opartą o wątki (wbudowana biblioteka `threading`) w celu płynnej\u{00A0}i jednoczesnej komunikacji sieciowej oraz obsługi gry.
 
 == 2. Model komunikacji
 
-Gra wykorzystuje protokół TCP do komunikacji między klientami a serwerem. Wybór ten został dokonany ze względu na wystarczającą wydajność względem UDP i prostotę implementacji. Podczas testowania eksperymentalnej implementacji opartej o UDP zauważyliśmy, że różnice w opóźnieniach były na tyle małe, że nie wpływały one znacznie na rozgrywkę.
+Gra wykorzystuje protokół TCP do komunikacji między klientami a serwerem. Wybór ten został dokonany \ ze względu na wystarczającą wydajność względem UDP i prostotę implementacji. Podczas testowania eksperymentalnej implementacji opartej o UDP zauważyliśmy, że różnice w opóźnieniach były na tyle małe, że nie wpływały one znacznie na rozgrywkę.
 
 Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danych oraz nieograniczone możliwości rozbudowy. W celu odseparowania poszczególnych zdarzeń, każde z nich jest zakończone znakiem `NULL`.
 
@@ -119,7 +119,7 @@ Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danyc
   table(
     columns: (1fr, 1fr, 5fr),
     table.header([Nazwa], [Typ], [Opis]),
-    `playerId`, "int", "Identyfikator gracza",
+    `playerId`, "int", "Identyfikator gracza.",
   ),
   caption: box[Struktura obiektu `data` dla zdarzenia `setPlayerId`.]
 )
@@ -213,9 +213,9 @@ Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danyc
 
 == 3. Opis działania aplikacji
 
-Gracze dołączają do serwera poprzez wysłanie zdarzenia `connect`. Następuje 5 krotna wymiana zdarzeń `ping` (ze strony serwera) oraz `pong` (ze strony użytkownika) w celu ustalenia opóźnienia (z ang. _latency_) połączenia. Następnie serwer przesyła zdarzenie `setPlayerId` (z przypisanym identyfikatorem gracza) oraz zdarzenie `gameState` (z aktualnym stanem oraz mapą gry) do użytkownika. Jeżeli okazałoby się, że serwer jest przepełniony zostanie przesłane zdarzenie `refuse` zamykające połączenie.
+Gracze dołączają do serwera poprzez wysłanie zdarzenia `connect`. Następuje 5-krotna wymiana zdarzeń `ping` (ze strony serwera) oraz `pong` (ze strony użytkownika) w celu ustalenia opóźnienia (z ang. _latency_) połączenia. Następnie serwer przesyła zdarzenie `setPlayerId` (z przypisanym identyfikatorem gracza) oraz zdarzenie `gameState` \ (z aktualnym stanem oraz mapą gry) do użytkownika. Jeżeli okazałoby się, że serwer jest przepełniony to zostanie przesłane zdarzenie `refuse` zamykające połączenie.
 
-Podczas gry gracze przesyłają lokalny stan swojego czołgu co 100 ms - 1 s (w zależności od ilości lokalnych zmian) w formie zdarzenia `gameState`. Serwer odbiera zdarzenia od wszystkich graczy, rozwiązuje konflikty, łączy je w jeden spójny stan i przesyła do wszystkich graczy w formie zdarzenia `gameState`. Ta operacja wykonywana jest co 100 ms.
+Podczas gry gracze przesyłają lokalny stan swojego czołgu co 100 ms - 1 s (w zależności od ilości lokalnych zmian) w formie zdarzenia `gameState`. Serwer odbiera zdarzenia od wszystkich graczy, rozwiązuje konflikty, łączy je \ w jeden spójny stan i przesyła do wszystkich graczy w formie zdarzenia `gameState`. Niniejsza operacja wykonywana jest co 100 ms.
 
 Po spełnieniu warunków zakończenia potyczki (pozostanie jeden gracz na planszy), serwer wysyła zdarzenie `gameState` z `isGameOver` ustawionym na `true`, co informuje klientów o zakończeniu gry. Po 3 s serwer rozpoczyna nową grę pozwalając graczom na dalszą jej kontynuację.
 
@@ -223,7 +223,7 @@ W celu rozłączenia się z serwerem gracz wysyła zdarzenie `disconnect` (w wyn
 
 == 4. Potencjalne elementy krytyczne
 
-Najważniejszym, pod względem spójności, elementem gry jest obiekt `gameState` przechowujący jej stan. W celu ochrony jego spójności zastosowaliśmy mechanizm blokady Read-Write, umożliwiający jednoczesny odczyt przez wiele wątków oraz wyłączny zapis przez jeden wątek. Dzięki temu zapewniamy, że stan gry jest zawsze spójny i niezmienny podczas odczytu.
+Najważniejszym, pod względem spójności, elementem gry jest obiekt `gameState` przechowujący jej stan. W celu ochrony jego spójności zastosowaliśmy mechanizm blokady Read-Write, umożliwiający jednoczesny odczyt przez wiele wątków oraz wyłączny zapis przez jeden wątek. Dzięki temu zapewniamy, że stan gry jest zawsze spójny \ i niezmienny podczas odczytu.
 
 Kolejnym elementem krytycznym jest obsługa zdarzeń. W celu zapewnienia spójności, zdarzenia są przetwarzane w kolejności ich otrzymania w sposób synchroniczny (po jednym zdarzeniu na raz) przez główny wątek serwera, po pobraniu z kolejki zdarzeń. Dzięki temu zapewniamy, że zdarzenia są przetwarzane w kolejności ich otrzymania i nie dochodzi do konfliktów.
 
@@ -234,19 +234,21 @@ Kolejnym elementem krytycznym jest obsługa zdarzeń. W celu zapewnienia spójno
   caption: "Diagram klas."
 )
 
+#pagebreak()
+
 === 5.1. Opis klas
 
 Nasza gra składa się z kilku klas, z których najważniejsze to:
 
 - `Game` - klasa zarządzająca grą, przechowująca stan gry, obsługująca zdarzenia graczy oraz zarządzająca wątkami.
-- `GameState` - klasa przechowująca stan gry, czołgów, pocisków oraz / lub przeszkód na mapie. W zależności od zdarzenia, obiekt może zawierać wszystkie lub parę z tych elementów. Klasa ta jest używana do przesyłania stanu gry między serwerem a klientami, przez co w całości powinna być wysyłana jedynie podczas dołączania gracza do gry. W każdym innym przypadku zarówno serwer jak i klient przesyłają jedynie różnice między stanami gry, które następnie będą przetwarzane przez klasę `Game` i odpowiednio ją modyfikować.
-- `Tank` - klasa reprezentująca czołg / gracza, przechowująca jego pozycję, kierunek, prędkość, punkty oraz informację o tym, czy czołg jest żywy.
-- `Bullet` - klasa reprezentująca pocisk, przechowująca jego pozycję, kierunek oraz prędkość. Pociski są tworzone przez czołgi i poruszają się w zadanym kierunku z zadaną prędkością.
-- `Obstacle` - klasa reprezentująca przeszkodę na mapie, przechowująca jej pozycję oraz typ. Przeszkody są nieruchome i niezmienne w czasie gry, przez co nie są przesyłane między serwerem a klientami poza początkiem rozgrywki.
+- `GameState` - klasa przechowująca stan gry, czołgów, pocisków i/lub przeszkód na mapie. W zależności \ od zdarzenia, obiekt może zawierać wszystkie lub parę z tych elementów. Klasa ta jest używana do przesyłania stanu gry między serwerem a klientami. W całości powinna być wysyłana jedynie podczas dołączania gracza \ do gry. W każdym innym przypadku, zarówno serwer jak i klient, przesyłają jedynie różnice między stanami gry, które następnie będą przetwarzane przez klasę `Game` po czym nastąpi modyfikacja stanu gry.
+- `Tank` - klasa reprezentująca czołg (gracza) przechowująca jego pozycję, kierunek, prędkość, punkty oraz informację o tym, czy czołg jest żywy.
+- `Bullet` - klasa reprezentująca pocisk przechowująca jego pozycję, kierunek oraz prędkość. Pociski są tworzone przez czołgi i poruszają się w zadanym kierunku z zadaną prędkością.
+- `Obstacle` - klasa reprezentująca przeszkodę na mapie przechowująca jej pozycję oraz typ. Przeszkody są nieruchome i niezmienne w czasie gry, przez co nie są przesyłane między serwerem a klientami poza początkiem rozgrywki.
 
 Obiekt `Game` jest wykorzystywany zarówno przez klasy `Client` oraz `Server` w celu zarządzania grą oraz obsługi zdarzeń. Dzięki temu mechanizmy gry są identyczne zarówno po stronie serwerera jak i gracza. Klasa `Client` jest odpowiedzialna za obsługę komunikacji z serwerem, natomiast klasa `Server` za zarządzanie grą, obsługę zdarzeń oraz komunikację z klientami.
 
-Ze względu na typ gry oraz jej implementację nie zdecydowaliśmy się na wprowadzenie dziedziczenia między klasami, gdyż nie przyniosłoby to żadnych korzyści, a jedynie zwiększyło by złożoność kodu. W przypadku tego typu projektu kompozycja jest zdecydowanie lepszym rozwiązaniem i pozwala na większą elastyczność w przyszłych zmianach.
+Ze względu na typ gry oraz jej implementację nie zdecydowaliśmy się na wprowadzenie dziedziczenia między klasami, gdyż nie przyniosłoby to żadnych korzyści, a jedynie zwiększyłoby złożoność kodu. W przypadku tego typu projektu kompozycja jest zdecydowanie lepszym rozwiązaniem i pozwala na większą elastyczność przy wprowadzaniu przyszłych zmian.
 
 == 6. FAQ
 
@@ -256,27 +258,27 @@ Po przetestowaniu obu protokołów, zdecydowaliśmy się na TCP ze względu na m
 
 Choć UDP jest szybszy, to implementacja gry przy użyciu tego  protokołu wymagałaby dodatkowego nakładu pracy. W przypadku TCP odnotowane opóźnienia względem implementacji korzystającej z UDP były na tyle małe, że nie miały one wpływu na rozgrywkę.
 
-=== 6.2. W jaki sposób radzimy sobie z sytuacją w której klient przestał przesyłać informacje?
+=== 6.2. W jaki sposób radzimy sobie z sytuacją, w której klient przestał przesyłać informacje?
 
 W przypadku, gdy klient przestaje przesyłać informacje, serwer po 5 s od ostatniego zdarzenia wysyła zdarzenie `disconnect` w celu rozłączenia klienta. W momencie wysyłania zdarzenia czołg klienta zostaje natychmiast usunięty z gry.
 
-W międzyczasie serwer będzie "symulował" zachowanie czołgu poprzez ekstrapolację przez co najwyżej 0,5 s. Po tym czasie czołg klienta zatrzyma się w wyznaczonym przez ekstrapolację miejscu.
+W międzyczasie serwer będzie "symulował" zachowanie czołgu poprzez ekstrapolację przez co najwyżej 0,5 s. \ Po tym czasie czołg klienta zatrzyma się w wyznaczonym przez ekstrapolację miejscu.
 
-=== 6.3. W jaki sposób radzimy sobie z sytuacją w której serwer przestał przesyłać informacje?
+=== 6.3. W jaki sposób radzimy sobie z sytuacją, w której serwer przestał przesyłać informacje?
 
-Klient symuluje zachowania czołgów innych graczy dzięki ekstrapolacji (przez maks. 0,5 s). Jeżeli do tego czasu nie uda się przywrócić połączenia z serwerem, klient zakończy grę (lokalnie) i pokaże komunikat o problemach z połączeniem.
+Klient symuluje zachowania czołgów innych graczy dzięki ekstrapolacji (przez maksymalnie 0,5 s). Jeżeli do tego czasu nie uda się przywrócić połączenia z serwerem, klient zakończy grę (lokalnie) i wyświetli komunikat o problemach z połączeniem.
 
 === 6.4. W jaki sposób radzimy sobie z opóźnieniami przesyłu i/lub zakolejkowanymi wiadomościami?
 
 Serwer wykorzystuje asynchroniczny model przetwarzania zdarzeń, co pozwala na obsługę kolejnych zdarzeń podczas wysyłania i oczekiwania na ukończenie połączenia. Wszystkie zdarzenia są przetwarzane w kolejności ich otrzymania, także w przypadku opóźnień po stronie klienta. Tak szybko jak nadejdą opóźnione zdarzenia, zostaną one obsłużone.
 
-Podczas gry, gdy zdarzenia klienta nie dochodzą do serwera, ten ekstrapoluje ruch czołgu (przez 0,5 s) na podstawie ostatnich danych otrzymanych od klienta i przesyła je do pozostałych graczy. Po oknie ekstrapolacji, ale przed wyrzuceniem gracza z powodu nieaktywności czołg klienta nie porusza się. W przypadku, gdy klient znów zacznie przesyłać dane, serwer cofnie czołg klienta do pozycji sprzed maks. 0,5 s i zaakceptuje dane od klienta o ile nie są one starsze niż 0,5 s. W innym wypadku pozycja czołgu klienta będzie taka sama, jak po cofnięciu.
+Podczas gry, gdy zdarzenia klienta nie dochodzą do serwera, ten ekstrapoluje ruch czołgu (przez 0,5 s) na podstawie ostatnich danych otrzymanych od klienta i przesyła je do pozostałych graczy. Po oknie ekstrapolacji, ale przed wyrzuceniem gracza z powodu nieaktywności czołg klienta nie porusza się. W przypadku, gdy klient znów zacznie przesyłać dane, serwer cofnie czołg klienta do pozycji sprzed maksymalnie 0,5 s i zaakceptuje dane od klienta, o ile nie są one starsze niż 0,5 s. W innym wypadku pozycja czołgu klienta będzie taka sama, jak po cofnięciu.
 
-=== 6.5. W jaki sposób weryfikujemy, że dane zostały przesłane w całości?
+=== 6.5. W jaki sposób weryfikujemy, czy dane zostały przesłane w całości?
 
 Dzięki wykorzystaniu JSON'a jako medium przesyłu danych, serwer jest w stanie sprawdzić, czy dane zostały przesłane w całości. W przypadku błędu przesyłu danych serwer odrzuca zdarzenie i oczekuje na kolejne. Każda wiadomość musi być zakończona znakiem `NULL` w celu odseparowania poszczególnych JSON'ów.
 
-=== 6.6. W jaki sposób radzimy sobie z sytuacją gdy pakiet "zagubi się" i nie dotrze poprawnie do/z serwera?
+=== 6.6. W jaki sposób radzimy sobie z sytuacją, gdy pakiet "zagubi się" i nie dotrze poprawnie do/z serwera?
 
 TCP zapewnia, że dane zostaną dostarczone w całości i w odpowiedniej kolejności. W przypadku, gdy pakiet zostanie "zagubiony", TCP ponownie wyśle dane. W przypadku, gdy pakiet nie dotrze do serwera, klient ponownie wyśle dane.
 
