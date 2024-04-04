@@ -1,34 +1,40 @@
 sequenceDiagram
-    actor  Gracz1
-    participant  Serwer
-    actor  Gracz2
+    actor Gracz1 as Gracz 1
+    participant Serwer
+    actor Gracz2 as Gracz 2
+    actor Gracz N
+    Note right of Gracz N: Maksymalna liczba graczy to 4
+
     alt W przypadku przepełnionego serwera, ten może odrzucić połączenie
     Gracz2 ->> Serwer: connect
     Serwer ->> Gracz2: refuse
     end
 
     Gracz1 ->> Serwer: connect
+
     loop 5 razy
+    Note over Serwer, Gracz1: Ustalanie opóźnienia połączenia
     Serwer ->> Gracz1: ping
     Gracz1 ->> Serwer: pong
     end
-    Note over Gracz1, Serwer: Ustalanie opóźnienia połączenia
+
     Serwer ->> Gracz1: setPlayerId
     Serwer ->> Gracz1: gameState
 
     Gracz2 ->> Serwer: connect
+
     loop 5 razy
+    Note over Gracz2, Serwer: Ustalanie opóźnienia połączenia
     Serwer ->> Gracz2: ping
     Gracz2 ->> Serwer: pong
     end
-    Note over Gracz2, Serwer: Ustalanie opóźnienia połączenia
+
     Serwer ->> Gracz2: setPlayerId
     Serwer ->> Gracz2: gameState
 
     loop gracze wysyłają swój stan gry co 100ms - 1s w zależności od gęstości wydarzeń
         Gracz1 ->> Serwer: gameState
         Gracz2 ->> Serwer: gameState
-        
     end
 
     loop wysyła jednocześnie do wszystkich graczy co 100 ms

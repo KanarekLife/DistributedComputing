@@ -15,10 +15,12 @@
 
 #set document(
   title: "Tanks - dokumentacja",
-  author: "Stanisław Nieradko, Bartłomiej Krawisz, Jakub Bronowski",
+  author: "Bartłomiej Krawisz, Jakub Bronowski, Stanisław Nieradko",
 )
 
 #set text(font: "Lato")
+
+#set par(justify: true)
 
 #set ref(supplement: it => {
   it.supplement.text.replace("Table", "Tabela")
@@ -59,8 +61,8 @@
         columns: (auto, auto, auto),
         column-gutter: 25pt,
         row-gutter: 10pt,
-        [Stanisław Nieradko], [Bartłomiej Krawisz], [Jakub Bronowski],
-        [193044], [193319], [193208]
+        [Bartłomiej Krawisz], [Jakub Bronowski],  [Stanisław Nieradko],
+        [193319], [193208], [193044]
       ),
       v(100pt),
       image("imgs/logo.png"),
@@ -209,13 +211,11 @@ Do serializowania zdarzeń wybraliśmy format JSON z uwagi na czytelność danyc
   caption: "Diagram sekwencji."
 )
 
-#pagebreak()
-
 == 3. Opis działania aplikacji
 
 Gracze dołączają do serwera poprzez wysłanie zdarzenia `connect`. Następuje 5 krotna wymiana zdarzeń `ping` (ze strony serwera) oraz `pong` (ze strony użytkownika) w celu ustalenia opóźnienia (z ang. _latency_) połączenia. Następnie serwer przesyła zdarzenie `setPlayerId` (z przypisanym identyfikatorem gracza) oraz zdarzenie `gameState` (z aktualnym stanem oraz mapą gry) do użytkownika. Jeżeli okazałoby się, że serwer jest przepełniony zostanie przesłane zdarzenie `refuse` zamykające połączenie.
 
-Podczas gry gracze przesyłają lokalny stan swojego czołgu co 100ms - 1s (w zależności od ilości lokalnych zmian) w formie zdarzenia `gameState`. Serwer odbiera zdarzenia od wszystkich graczy, rozwiązuje konflikty, łączy je w jeden spójny stan i przesyła do wszystkich graczy w formie zdarzenia `gameState`. Ta operacja wykonywana jest co 100ms.
+Podczas gry gracze przesyłają lokalny stan swojego czołgu co 100 ms - 1 s (w zależności od ilości lokalnych zmian) w formie zdarzenia `gameState`. Serwer odbiera zdarzenia od wszystkich graczy, rozwiązuje konflikty, łączy je w jeden spójny stan i przesyła do wszystkich graczy w formie zdarzenia `gameState`. Ta operacja wykonywana jest co 100 ms.
 
 Po spełnieniu warunków zakończenia potyczki (pozostanie jeden gracz na planszy), serwer wysyła zdarzenie `gameState` z `isGameOver` ustawionym na `true`, co informuje klientów o zakończeniu gry. Po 3 s serwer rozpoczyna nową grę pozwalając graczom na dalszą jej kontynuację.
 
@@ -230,11 +230,23 @@ Kolejnym elementem krytycznym jest obsługa zdarzeń. W celu zapewnienia spójno
 == 5. Diagram klas
 
 #figure(
-  image("imgs/class.png", width: 45%),
+  image("imgs/class.png", width: 34%),
   caption: "Diagram klas."
 )
 
-#pagebreak()
+=== 5.1. Opis klas
+
+Nasza gra składa się z kilku klas, z których najważniejsze to:
+
+- `Game` - klasa zarządzająca grą, przechowująca stan gry, obsługująca zdarzenia graczy oraz zarządzająca wątkami.
+- `GameState` - klasa przechowująca stan gry, czołgów, pocisków oraz / lub przeszkód na mapie. W zależności od zdarzenia, obiekt może zawierać wszystkie lub parę z tych elementów. Klasa ta jest używana do przesyłania stanu gry między serwerem a klientami, przez co w całości powinna być wysyłana jedynie podczas dołączania gracza do gry. W każdym innym przypadku zarówno serwer jak i klient przesyłają jedynie różnice między stanami gry, które następnie będą przetwarzane przez klasę `Game` i odpowiednio ją modyfikować.
+- `Tank` - klasa reprezentująca czołg / gracza, przechowująca jego pozycję, kierunek, prędkość, punkty oraz informację o tym, czy czołg jest żywy.
+- `Bullet` - klasa reprezentująca pocisk, przechowująca jego pozycję, kierunek oraz prędkość. Pociski są tworzone przez czołgi i poruszają się w zadanym kierunku z zadaną prędkością.
+- `Obstacle` - klasa reprezentująca przeszkodę na mapie, przechowująca jej pozycję oraz typ. Przeszkody są nieruchome i niezmienne w czasie gry, przez co nie są przesyłane między serwerem a klientami poza początkiem rozgrywki.
+
+Obiekt `Game` jest wykorzystywany zarówno przez klasy `Client` oraz `Server` w celu zarządzania grą oraz obsługi zdarzeń. Dzięki temu mechanizmy gry są identyczne zarówno po stronie serwerera jak i gracza. Klasa `Client` jest odpowiedzialna za obsługę komunikacji z serwerem, natomiast klasa `Server` za zarządzanie grą, obsługę zdarzeń oraz komunikację z klientami.
+
+Ze względu na typ gry oraz jej implementację nie zdecydowaliśmy się na wprowadzenie dziedziczenia między klasami, gdyż nie przyniosłoby to żadnych korzyści, a jedynie zwiększyło by złożoność kodu. W przypadku tego typu projektu kompozycja jest zdecydowanie lepszym rozwiązaniem i pozwala na większą elastyczność w przyszłych zmianach.
 
 == 6. FAQ
 
